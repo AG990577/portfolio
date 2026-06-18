@@ -124,7 +124,10 @@
         <div class="m-book-preview">
           <button class="m-book-nav prev" onclick="bookTurn(-1)">‹</button>
           <div class="m-book-stage">
-            <img id="mBookImage" src="assets/book/book-01.png" alt="书籍预览" />
+            <div class="m-book-loading" id="mBookLoading">
+              <div class="m-spinner small"></div>
+            </div>
+            <img id="mBookImage" src="assets/book/book-01.jpg" alt="书籍预览" />
           </div>
           <button class="m-book-nav next" onclick="bookTurn(1)">›</button>
         </div>
@@ -278,18 +281,18 @@
   <script>
     // 书籍页面数据
     const bookPages = [
-      {src: "assets/book/book-01.png", title: "封面样机"},
-      {src: "assets/book/book-02.png", title: "扉页"},
-      {src: "assets/book/book-03.png", title: "引言页"},
-      {src: "assets/book/book-04.png", title: "藻井标题页"},
-      {src: "assets/book/book-05.png", title: "藻井解析"},
-      {src: "assets/book/book-06.png", title: "天圆地方"},
-      {src: "assets/book/book-07.png", title: "十二金柱"},
-      {src: "assets/book/book-08.png", title: "斗拱结构"},
-      {src: "assets/book/book-09.png", title: "风华四方"},
-      {src: "assets/book/book-10.png", title: "龙腾云霄"},
+      {src: "assets/book/book-01.jpg", title: "封面样机"},
+      {src: "assets/book/book-02.jpg", title: "扉页"},
+      {src: "assets/book/book-03.jpg", title: "引言页"},
+      {src: "assets/book/book-04.jpg", title: "藻井标题页"},
+      {src: "assets/book/book-05.jpg", title: "藻井解析"},
+      {src: "assets/book/book-06.jpg", title: "天圆地方"},
+      {src: "assets/book/book-07.jpg", title: "十二金柱"},
+      {src: "assets/book/book-08.jpg", title: "斗拱结构"},
+      {src: "assets/book/book-09.jpg", title: "风华四方"},
+      {src: "assets/book/book-10.jpg", title: "龙腾云霄"},
       {src: "assets/book/book-11.jpg", title: "雕梁画栋"},
-      {src: "assets/book/book-12.png", title: "金龙和玺纹"},
+      {src: "assets/book/book-12.jpg", title: "金龙和玺纹"},
       {src: "assets/book/book-13.jpg", title: "金凤和玺纹"},
       {src: "assets/book/book-14.jpg", title: "金龙和玺纹细节"},
       {src: "assets/book/book-15.jpg", title: "祈年殿历史时间轴"},
@@ -298,6 +301,21 @@
       {src: "assets/book/book-18.jpg", title: "内页 18"}
     ];
     let currentBookPage = 0;
+    let bookPreloadCache = {}; // 预加载缓存
+
+    // 预加载图片
+    function preloadBookImage(index) {
+      if (index < 0 || index >= bookPages.length || bookPreloadCache[index]) return;
+      const img = new Image();
+      img.src = bookPages[index].src;
+      bookPreloadCache[index] = img;
+    }
+
+    // 预加载相邻页
+    function preloadAdjacentPages(index) {
+      preloadBookImage(index - 1);
+      preloadBookImage(index + 1);
+    }
 
     // 滚动到指定区域
     function scrollToSection(id) {
@@ -331,16 +349,38 @@
 
     // 书籍翻页
     function bookTurn(dir) {
-      currentBookPage = Math.max(0, Math.min(bookPages.length - 1, currentBookPage + dir));
+      const newPage = currentBookPage + dir;
+      if (newPage < 0 || newPage >= bookPages.length) return;
+      
+      currentBookPage = newPage;
       const img = document.getElementById('mBookImage');
+      const loading = document.getElementById('mBookLoading');
+      
+      // 显示加载动画
+      loading.style.display = 'flex';
       img.style.opacity = '0';
-      setTimeout(() => {
+      
+      // 如果图片已缓存，直接显示
+      if (bookPreloadCache[currentBookPage]) {
         img.src = bookPages[currentBookPage].src;
-        document.getElementById('mBookTitle').textContent = bookPages[currentBookPage].title;
-        document.getElementById('mBookPage').textContent = 
-          String(currentBookPage + 1).padStart(2, '0') + '/' + String(bookPages.length).padStart(2, '0');
+        loading.style.display = 'none';
         img.style.opacity = '1';
-      }, 180);
+      } else {
+        // 否则加载图片
+        img.onload = () => {
+          loading.style.display = 'none';
+          img.style.opacity = '1';
+        };
+        img.src = bookPages[currentBookPage].src;
+      }
+      
+      // 更新标题和页码
+      document.getElementById('mBookTitle').textContent = bookPages[currentBookPage].title;
+      document.getElementById('mBookPage').textContent = 
+        String(currentBookPage + 1).padStart(2, '0') + '/' + String(bookPages.length).padStart(2, '0');
+      
+      // 预加载相邻页
+      preloadAdjacentPages(currentBookPage);
     }
 
     // 视频弹窗
@@ -401,6 +441,17 @@
         if (Math.abs(diff) > 50) bookTurn(diff > 0 ? 1 : -1);
       }, {passive: true});
     }
+
+    // 初始化：预加载相邻页面
+    window.addEventListener('DOMContentLoaded', () => {
+      // 缓存第一张图片（已加载）
+      const firstImg = document.getElementById('mBookImage');
+      if (firstImg.complete) {
+        bookPreloadCache[0] = firstImg;
+      }
+      // 预加载第2页和第3页
+      preloadAdjacentPages(0);
+    });
   </script>
 </body>
 </html>
