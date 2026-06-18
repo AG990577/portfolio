@@ -249,13 +249,19 @@
     </div>
   </nav>
 
-  <!-- 视频播放弹窗 -->
+    <!-- 视频播放弹窗 -->
   <div class="m-modal" id="videoModal">
     <div class="m-modal-bg" onclick="closeVideo()"></div>
     <div class="m-modal-box">
       <button class="m-modal-close" onclick="closeVideo()">×</button>
       <h3 id="mModalTitle"></h3>
-      <video id="mModalVideo" controls playsinline webkit-playsinline></video>
+      <div class="m-video-wrap">
+        <video id="mModalVideo" controls playsinline webkit-playsinline preload="none"></video>
+        <div class="m-video-loading" id="mVideoLoading">
+          <div class="m-spinner"></div>
+          <p>视频加载中，请稍候…</p>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -341,10 +347,24 @@
     function openVideo(src, title) {
       const modal = document.getElementById('videoModal');
       const video = document.getElementById('mModalVideo');
+      const loading = document.getElementById('mVideoLoading');
       document.getElementById('mModalTitle').textContent = title;
+      loading.style.display = 'flex';
+      video.style.display = 'none';
       video.src = src;
       modal.classList.add('show');
       document.body.style.overflow = 'hidden';
+      // 视频可以播放时隐藏 loading
+      video.addEventListener('loadeddata', function handler() {
+        loading.style.display = 'none';
+        video.style.display = 'block';
+        video.removeEventListener('loadeddata', handler);
+      });
+      // 超时处理
+      setTimeout(() => {
+        loading.style.display = 'none';
+        video.style.display = 'block';
+      }, 8000);
     }
     function closeVideo() {
       const modal = document.getElementById('videoModal');
@@ -352,6 +372,8 @@
       modal.classList.remove('show');
       video.pause();
       video.src = '';
+      video.style.display = 'block';
+      document.getElementById('mVideoLoading').style.display = 'none';
       document.body.style.overflow = '';
     }
 

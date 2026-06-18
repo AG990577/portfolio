@@ -713,6 +713,36 @@ img { display: block; max-width: 100%; }
   background: #111;
   display: block;
 }
+.m-video-wrap {
+  position: relative;
+}
+.m-video-loading {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(17,17,17,0.85);
+  border-radius: 16px;
+  z-index: 5;
+  gap: 16px;
+}
+.m-video-loading p {
+  color: rgba(255,255,255,0.7);
+  font-size: 14px;
+}
+.m-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255,255,255,0.15);
+  border-top-color: rgba(255,255,255,0.8);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
 .m-poster-modal-box {
   display: grid;
   place-items: center;
